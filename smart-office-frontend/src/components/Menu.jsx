@@ -38,7 +38,7 @@ const Menu = () => {
       </div>
 
       <div className="flex-none pr-4">
-        <span className="text-lg font-light">Smart Office</span>
+        <span className="italic text-lg font-light">Smart Office System</span>
       </div>
     </div>
   );
