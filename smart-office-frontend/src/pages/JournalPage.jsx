@@ -9,10 +9,10 @@ const JournalPage = () => {
                 <div className="text-sm col-span-3 font-bold">Имя</div>
                 <div className="text-sm col-span-1 font-bold">Значение</div>
             </div>
-            <Note />
-            <Note />
-            <Note />
-            <Note />
+            <Note level={"low"} />
+            <Note level={"medium"} />
+            <Note level={"low"} />
+            <Note level={"high"} />
         </div>
     );
 }

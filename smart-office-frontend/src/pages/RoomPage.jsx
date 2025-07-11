@@ -41,9 +41,9 @@ const RoomPage = () => {
                     </div>
 
                     <div className="grid grid-cols-3 gap-5">
-                        <Device value="24.2°" name="Термометр - B142" imagePath={testImage} status="● Online" />
-                        <Device value="752 мрс" name="Тонометр - h43KSA" imagePath={"https://cdn.dribbble.com/userupload/7759886/file/original-b65f49e2ce45203a828f23fc0066c0b1.png?format=webp&resize=400x300&vertical=center"} status="● Online" />
-                        <Device value="24.2°" name="Температура - Xi12" imagePath={testImage} status="● Online" />
+                        <Device size='m' value="24.2°" name="Термометр - B142" imagePath={testImage} status="● Online" />
+                        <Device size='m' value="752 мрс" name="Тонометр - h43KSA" imagePath={"https://cdn.dribbble.com/userupload/7759886/file/original-b65f49e2ce45203a828f23fc0066c0b1.png?format=webp&resize=400x300&vertical=center"} status="● Online" />
+                        <Device size='m' value="24.2°" name="Температура - Xi12" imagePath={testImage} status="● Online" />
 
                     </div>
                 </div>

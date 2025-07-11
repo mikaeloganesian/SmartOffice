@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom'; // Импортируем NavLink вместо Link
+import { NavLink, Link } from 'react-router-dom'; // Импортируем NavLink вместо Link
 
 const Menu = () => {
   const baseClasses = "px-4 py-2 rounded-3xl ";
@@ -37,8 +37,9 @@ const Menu = () => {
         </NavLink>
       </div>
 
-      <div className="flex-none pr-4">
-        <span className="italic text-lg font-light">Smart Office System</span>
+      <div className="flex-none pr-4 inline-flex gap-8">
+        <span className="italic text-lg font-light">Оганесян Микаэл</span>
+        <Link to={"/login"}><span className='underline text-lg cursor-pointer font-medium'>Выход</span></Link>
       </div>
     </div>
   );
