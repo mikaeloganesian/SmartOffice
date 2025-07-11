@@ -1,0 +1,476 @@
+openapi: 3.0.3
+info:
+  title: Smart Office API
+  description: |
+    API для сервиса умного офиса.
+    Позволяет техникам регистрировать кабинеты и датчики, а владельцам кабинетов - управлять правилами автоматизации и отслеживать состояние своих устройств.
+    Данные от датчиков поступают в систему через брокер сообщений RabbitMQ и не являются частью этого API.
+  version: 2.1.0
+  contact:
+    name: API Support Team
+    url: https://support.office-automation.example.com
+    email: api-support@office-automation.example.com
+  x-api-id: b5c4d3e2-1a0b-9e8f-7a6b-6d5e4f3a2b1c
+  x-audience: company-internal
+
+servers:
+  - url: https://api.office-automation.example.com/api/v1
+    description: Production Server
+
+tags:
+  - name: User Management
+    description: Управление пользователями, доступное только техникам
+  - name: Room Management
+    description: Управление кабинетами и их владельцами
+  - name: Device Management
+    description: Управление датчиками и исполнительными устройствами в контексте кабинета
+
+paths:
+  /users:
+    get:
+      tags:
+        - User Management
+      summary: Получить список всех пользователей
+      description: |
+        Возвращает список всех пользователей.
+        Доступно только для техников.
+      operationId: listUsers
+      security:
+        - BearerAuth: [users.read]
+      responses:
+        '200':
+          description: Список пользователей.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+        '403':
+          description: Доступ запрещен. Только для техников.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /rooms:
+    post:
+      tags:
+        - Room Management
+      summary: Создать новый кабинет
+      description: Техник создает новый кабинет и назначает ему владельца.
+      operationId: createRoom
+      security:
+        - BearerAuth: [rooms.write]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoomCreate'
+      responses:
+        '201':
+          description: Кабинет успешно создан.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '403':
+          description: Доступ запрещен. Только для техников.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Room Management
+      summary: Получить список кабинетов
+      description: |
+        Возвращает список кабинетов.
+        - Техники видят все кабинеты.
+        - Владельцы видят только свои кабинеты.
+      operationId: listRooms
+      security:
+        - BearerAuth: [rooms.read]
+      responses:
+        '200':
+          description: Список кабинетов.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Room'
+
+  /rooms/{room_id}:
+    get:
+      tags:
+        - Room Management
+      summary: Получить информацию о кабинете
+      operationId: getRoomById
+      security:
+        - BearerAuth: [rooms.read]
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+      responses:
+        '200':
+          description: Детальная информация о кабинете.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Room'
+        '404':
+          description: Кабинет не найден.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    delete:
+      tags:
+        - Room Management
+      summary: Удалить кабинет
+      description: Техник удаляет кабинет. Удаление будет отклонено, если в кабинете есть зарегистрированные датчики.
+      operationId: deleteRoom
+      security:
+        - BearerAuth: [rooms.write]
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+      responses:
+        '204':
+          description: Кабинет успешно удален.
+        '409':
+          description: Конфликт. Кабинет содержит датчики и не может быть удален.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rooms/{room_id}/devices:
+    get:
+      tags:
+        - Device Management
+      summary: Получить список датчиков в кабинете
+      description: |
+        Возвращает список всех датчиков, зарегистрированных в указанном кабинете.
+        К каждому датчику прилагается его последнее известное значение.
+      operationId: listDevicesInRoom
+      security:
+        - BearerAuth: [devices.read]
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+      responses:
+        '200':
+          description: Список датчиков с их текущим состоянием.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DeviceWithState'
+        '404':
+          description: Кабинет не найден.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      tags:
+        - Device Management
+      summary: Зарегистрировать новый датчик в кабинете
+      description: |
+        Техник регистрирует новый физический датчик/устройство, привязывая его к указанному кабинету
+        и указывая его уникальный аппаратный идентификатор (`hardware_id`),
+        который устройство будет использовать для публикации данных в RabbitMQ.
+      operationId: registerDeviceInRoom
+      security:
+        - BearerAuth: [devices.write]
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceCreate'
+      responses:
+        '201':
+          description: Датчик успешно зарегистрирован.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '409':
+          description: Конфликт. Датчик с таким `hardware_id` уже существует.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /rooms/{room_id}/devices/{device_id}:
+    delete:
+      tags:
+        - Device Management
+      summary: Удалить датчик
+      operationId: deleteDevice
+      security:
+        - BearerAuth: [devices.write]
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204':
+          description: Датчик успешно удален.
+        '409':
+          description: Конфликт. Датчик используется в правилах автоматизации.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    get:
+      tags:
+        - Device Management
+      summary: Получить историю показаний датчика
+      operationId: getDeviceHistory
+      security:
+        - BearerAuth: [devices.read]
+      parameters:
+        - $ref: '#/components/parameters/RoomId'
+        - $ref: '#/components/parameters/DeviceId'
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: История показаний.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MetricPoint'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    RoomId:
+      name: room_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    DeviceId:
+      name: device_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RuleId:
+      name: rule_id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        type:
+          type: string
+        title:
+          type: string
+        status:
+          type: integer
+    Room:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+    RoomCreate:
+      type: object
+      required: [name, owner_id]
+      properties:
+        name:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+    RoomUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        owner_id:
+          type: string
+          format: uuid
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [technician, user]
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        room_id:
+          type: string
+          format: uuid
+        hardware_id:
+          type: string
+        type:
+          type: string
+          enum: [device, actuator]
+        value_type:
+          type: string
+    DeviceCreate:
+      type: object
+      required: [name, hardware_id, type]
+      properties:
+        name:
+          type: string
+        hardware_id:
+          type: string
+        type:
+          type: string
+          enum: [device, actuator]
+        value_type:
+          type: string
+          nullable: true
+    DeviceUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+    DeviceWithState:
+      allOf:
+        - $ref: '#/components/schemas/Device'
+        - type: object
+          properties:
+            last_value:
+              type: object
+            last_seen_at:
+              type: string
+              format: date-time
+              nullable: true
+    MetricPoint:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        value:
+          type: object
+    ActionRequest:
+      type: object
+      required: [command]
+      properties:
+        command:
+          type: string
+        payload:
+          type: object
+          nullable: true
+    RuleTrigger:
+      type: object
+      required:
+        - device_id
+        - condition
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        condition:
+          type: string
+    RuleAction:
+      type: object
+      required:
+        - device_id
+        - command
+      properties:
+        device_id:
+          type: string
+          format: uuid
+        command:
+          type: string
+        payload:
+          type: object
+          nullable: true
+    RuleCreate:
+      type: object
+      required:
+        - name
+        - trigger
+        - action
+      properties:
+        name:
+          type: string
+        trigger:
+          $ref: '#/components/schemas/RuleTrigger'
+        action:
+          $ref: '#/components/schemas/RuleAction'
+    RuleUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        is_enabled:
+          type: boolean
+    Rule:
+      allOf:
+        - $ref: '#/components/schemas/RuleCreate'
+        - type: object
+          properties:
+            id:
+              type: string
+              format: uuid
+            is_enabled:
+              type: boolean
+            created_at:
+              type: string
+              format: date-time
