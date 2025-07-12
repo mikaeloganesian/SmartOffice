@@ -34,7 +34,7 @@ const RoomPage = () => {
 
                 <div className="flex col-span-3 flex-col gap-5">
                     <div className="shadow bg-white rounded-2xl p-4 h-15 flex items-center justify-around">
-                            <Tag content={"● All Online"} />
+                            <Tag style='text-green-600' content={"● All Online"} />
                             <Tag content={"Офис номер 2"} />
                             <Tag content={"Последний замер 21.09 13:45"} />
                             <Link to={"/"}><Tag style={"text-gray-400 hover:scale-105"} content={"← Назад"} /></Link>
