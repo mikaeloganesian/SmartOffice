@@ -1,11 +1,11 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
-COPY ./smart-office-frontend/smart-office-frontend/package.json ./smart-office-frontend/smart-office-frontend/package.lock.json* ./
+COPY ./smart-office-frontend/package.json ./smart-office-frontend/package.lock.json* ./
 
 RUN npm install
 
-COPY ./smart-office-frontend/smart-office-frontend .
+COPY ./smart-office-frontend .
 
 RUN npm run build
 
