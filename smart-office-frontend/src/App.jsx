@@ -19,14 +19,16 @@ export default function App() {
       <div style={{
         background: `url(${background})`,
       }}>
-        <Menu />
         <Routes>
-          <Route path="/" element={<RoomsPage/>} />
-          <Route path="/room/:roomId" element={<RoomPage/>} />
-          <Route path="/devices" element={<DevicesPage/>} />
-          <Route path="/journal" element={<JournalPage/>} />
           <Route path="/login" element={<LoginPage/>} />
           <Route path="/*" element={<NotFound/>} />
+
+          <Route element={<Menu />}>
+            <Route path="/" element={<RoomsPage/>} />
+            <Route path="/room/:roomId" element={<RoomPage/>} />
+            <Route path="/devices" element={<DevicesPage/>} />
+            <Route path="/journal" element={<JournalPage/>} />
+          </Route>
         </Routes>
       </div>
     </Router>

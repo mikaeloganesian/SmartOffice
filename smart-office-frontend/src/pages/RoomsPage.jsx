@@ -1,24 +1,73 @@
+// RoomsPage.js
 import Room from "../components/Room";
 import { Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import RoomService from "../api/room-service/room.api";
+
+import { getImageByRoomId } from '../utils/imageUtils'; // <-- Импорт новой функции
 
 const RoomsPage = () => {
-    const data = {
-        1: {status: "3", name: "Офис 1", imagePath: "https://estima.ru/upload/iblock/cb3/jfw0kcksfi5eadipyulv3knderpthbnf.jpg"},
-        2: {status: "4", name: "Офис 2", imagePath: "https://cdn2.inmyroom.ru/uploads/photo/file/a8/a8e4/base_a8e4096a-9249-4fbe-870d-b08d03a78f24.jpg"},
-        3: {status: "2", name: "Офис 3", imagePath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-Ze3zs7DRiq_f7akv5f6dGZ-NiSO3adgYqw&s"},
-        4: {status: "3", name: "Офис 4", imagePath: "https://spb.studio-mint.ru/sites/default/files/sites/default/files/imce/2_27.jpg"},
-        5: {status: "2", name: "Офис 5", imagePath: "https://interior-design.moscow/wp-content/uploads/2017/05/dizayn-ofisa-v-sovremennom-stile-foto-01-1200x675.jpg"}
-    };
+    const [roomsData, setRoomsData] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
 
-    const roomKeys = Object.keys(data);
+    useEffect(() => {
+        async function fetchRooms() {
+            try {
+                setIsLoading(true);
+                const response = await RoomService.getAllRooms();
+                if (response && Array.isArray(response.items)) {
+                    setRoomsData(response.items);
+                } else if (Array.isArray(response)) {
+                    setRoomsData(response);
+                } else {
+                    console.warn("API response is not in expected format:", response);
+                    setRoomsData([]);
+                }
+            } catch (err) {
+                console.error("Ошибка в получении комнаты: ", err);
+                setError(err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchRooms();
+    }, []);
+
+    if (isLoading) {
+        return <div className="text-center mt-20 text-xl">Загрузка комнат...</div>;
+    }
+
+    if (error) {
+        return <div className="text-center mt-20 text-xl text-red-500">Ошибка при загрузке данных: {error.message}</div>;
+    }
+
+    const roomsToRender = Array.isArray(roomsData) ? roomsData : (roomsData && Array.isArray(roomsData.items) ? roomsData.items : []);
 
     return (
         <div className="grid mt-12 grid-cols-4 gap-5 p-5 mx-20">
-            {roomKeys.map((key) => {
-                return <Link to={`/room/${key}?imagePath=${encodeURIComponent(data[key].imagePath)}`}><Room key={key} count={data[key].status} imagePath={data[key].imagePath} name={data[key].name} /></Link>;
-            })}
+            {roomsToRender.length > 0 ? (
+                roomsToRender.map((room) => { // <-- Убрали 'index', так как он больше не нужен для выбора изображения
+                    const roomImage = getImageByRoomId(room.id); // <-- Используем ID комнаты для выбора изображения
+
+                    return (
+                        <Link
+                            to={`/room/${room.name}?roomId=${encodeURIComponent(room.id)}`}
+                            key={room.id}
+                        >
+                            <Room
+                                imagePath={roomImage} // Передаем изображение, выбранное по ID
+                                name={room.name}
+                                count={room.status || "1"}
+                            />
+                        </Link>
+                    );
+                })
+            ) : (
+                <div className="col-span-4 text-center text-xl">Нет доступных комнат.</div>
+            )}
         </div>
     );
-}
+};
 
-export default RoomsPage
+export default RoomsPage;
