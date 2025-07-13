@@ -29,16 +29,16 @@ const DevicePage = () => {
     const displayedHistory = showAllHistory ? deviceHistory : deviceHistory.slice(0, 20);
 
     const chartData = useMemo(() => {
-        return deviceHistory
-            .slice(-10)
-            .map(record => ({
-                time: new Date(record.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                value: parseFloat(record.value) || 0,
-            }));
-    }, [deviceHistory]);
+    return deviceHistory
+        .slice(-50)
+        .map(record => ({
+            time: new Date(record.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+            value: parseFloat(record.value) || 0,
+        }));
+}, [deviceHistory]);
 
     if (isLoading) {
-        return <div className="text-center mt-20 text-xl">Загрузка данных устройства...</div>;
+        return <div className="text-center pb-20 mt-20 text-xl">Загрузка данных устройства...</div>;
     }
 
     if (error) {
@@ -59,7 +59,7 @@ const DevicePage = () => {
                 >
                 </div>
 
-                <div className="flex col-span-3 flex-col gap-5">
+                <div className="graph-div flex col-span-3 flex-col gap-5">
                     <div className="shadow bg-white rounded-2xl p-4 h-15 flex items-center justify-around">
                         <Tag style={statusStyle} content={statusContent} />
                         <Tag content={`Последний замер ${latestMeasurementTime}`} />
@@ -74,16 +74,35 @@ const DevicePage = () => {
                     </div>
 
                     <div className="shadow bg-white rounded-2xl p-4 flex flex-col gap-3">
-                        <h3 className="text-xl font-bold text-brown mb-2">Характеристики устройства</h3>
+                        <h3 className="text-xl font-medium text-brown mb-2">Характеристики устройства</h3>
                         <p className="text-gray-700"><strong>Имя устройства:</strong> {trimString(deviceData.name || 'Без имени', 40)}</p>
+                        <p className="text-gray-700"><strong>Тип:</strong> {deviceData.type || 'Неизвестен'}</p>
                         <p className="text-gray-700"><strong>ID устройства:</strong> {trimString(deviceId, 40)}</p>
                         <p className="text-gray-700"><strong>ID комнаты:</strong> {trimString(deviceData.roomId, 40)}</p>
+                        <p className='text-gray-700'><strong>ID оборудования:</strong> {deviceData.hardware_id || 'Неизвестен'}</p>
                         <p className="text-gray-700"><strong>Последнее значение:</strong> {deviceData.last_value === "false" ? "N/A" : deviceData.last_value}</p>
-                        <p className="text-gray-700"><strong>Тип:</strong> {deviceData.type || 'Неизвестен'}</p>
                     </div>
 
+                     {chartData.length > 0 && (
+                 <div className="shadow bg-white rounded-2xl p-4 flex flex-col gap-3">
+                    <h3 className="text-xl font-medium text-brown mb-2">График последних 50 показаний</h3>
+                    <div className='graph-div' style={{ width: '100%', height: 300 }}>
+                        <ResponsiveContainer>
+                            <LineChart className='graph-div' data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="time" />
+                                <YAxis />
+                                <Tooltip />
+                                <Legend />
+                                <Line type="monotone" dataKey="value" name="Значение" stroke="#a52a2a" strokeWidth={2} activeDot={{ r: 8 }}/>
+                            </LineChart>
+                        </ResponsiveContainer>
+                    </div>
+                </div>
+            )}
+
                     <div className="shadow bg-white rounded-2xl p-4 flex flex-col gap-3">
-                        <h3 className="text-xl font-bold text-brown mb-2">История показаний за 24 часа</h3>
+                        <h3 className="text-xl font-medium text-brown mb-2">История показаний за 24 часа</h3>
                         {deviceHistory.length > 0 ? (
                             <>
                                 <div className="overflow-x-auto">
@@ -120,23 +139,6 @@ const DevicePage = () => {
                 </div>
             </div>
 
-            {chartData.length > 0 && (
-                 <div className="mt-8 shadow bg-white rounded-2xl p-4 flex flex-col gap-3">
-                    <h3 className="text-xl font-bold text-brown mb-2">График последних 10 показаний</h3>
-                    <div style={{ width: '100%', height: 300 }}>
-                        <ResponsiveContainer>
-                            <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="time" />
-                                <YAxis />
-                                <Tooltip />
-                                <Legend />
-                                <Line type="monotone" dataKey="value" name="Значение" stroke="#a52a2a" strokeWidth={2} activeDot={{ r: 8 }}/>
-                            </LineChart>
-                        </ResponsiveContainer>
-                    </div>
-                </div>
-            )}
 
             {isFullScreen && (
                 <div

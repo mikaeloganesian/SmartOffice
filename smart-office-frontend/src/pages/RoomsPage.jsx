@@ -7,13 +7,11 @@ import { getImageByRoomId } from '../utils/imageUtils';
 
 const RoomsPage = () => {
     const [roomsData, setRoomsData] = useState([]);
-    // Будем хранить количество устройств для каждой комнаты по её ID: { roomId: deviceCount, ... }
     const [roomDeviceCounts, setRoomDeviceCounts] = useState({});
-    const [isLoadingRooms, setIsLoadingRooms] = useState(true); // Отдельный флаг для загрузки комнат
-    const [isLoadingDevices, setIsLoadingDevices] = useState(false); // Отдельный флаг для загрузки устройств для комнат
+    const [isLoadingRooms, setIsLoadingRooms] = useState(true);
+    const [isLoadingDevices, setIsLoadingDevices] = useState(false);
     const [error, setError] = useState(null);
 
-    // Эффект для загрузки списка комнат
     useEffect(() => {
         async function fetchRooms() {
             try {
@@ -54,19 +52,18 @@ const RoomsPage = () => {
                     if (response && Array.isArray(response.items)) {
                         counts[room.id] = response.items.length;
                     } else {
-                        // Если ответ не содержит items или не массив, считаем 0 устройств
                         counts[room.id] = 0;
                         console.warn(`Ответ для комнаты ${room.id} не содержит устройств в items:`, response);
                     }
                 } catch (err) {
                     console.error(`Ошибка при получении устройств для комнаты ${room.id}: `, err);
-                    counts[room.id] = 0; // В случае ошибки считаем 0 устройств
+                    counts[room.id] = 0;
                 }
             });
 
-            await Promise.all(fetchPromises); // Ждем завершения всех запросов
-            setRoomDeviceCounts(counts); // Обновляем состояние один раз
-            setIsLoadingDevices(false); // Завершаем загрузку счетчиков
+            await Promise.all(fetchPromises);
+            setRoomDeviceCounts(counts);
+            setIsLoadingDevices(false);
         }
 
         fetchDeviceCounts();
@@ -89,11 +86,11 @@ const RoomsPage = () => {
             {roomsToRender.length > 0 ? (
                 roomsToRender.map((room) => {
                     const roomImage = getImageByRoomId(room.id);
-                    const deviceCount = roomDeviceCounts[room.id] !== undefined ? roomDeviceCounts[room.id] : '...'; // Показывать '...' если еще грузится
+                    const deviceCount = roomDeviceCounts[room.id] !== undefined ? roomDeviceCounts[room.id] : '...';
 
                     return (
                         <Link
-                            to={`/room/${room.name}?roomId=${encodeURIComponent(room.id)}`}
+                            to={`/room/${room.id}`}
                             key={room.id}
                         >
                             <Room

@@ -19,7 +19,6 @@ const useDeviceData = (deviceId) => {
             setError(null);
 
             try {
-                // Ваша оригинальная логика получения данных остается нетронутой
                 const roomsResponse = await RoomService.getAllRooms();
                 let rooms = [];
                 if (roomsResponse && Array.isArray(roomsResponse.items)) {
@@ -40,7 +39,7 @@ const useDeviceData = (deviceId) => {
                         }
                         return [];
                     } catch (err) {
-                        console.error(err)
+                        console.error(err);
                         return [];
                     }
                 });
@@ -56,13 +55,21 @@ const useDeviceData = (deviceId) => {
                     const historyTo = new Date().toISOString();
 
                     const historyResponse = await RoomService.getDeviceByRoomAndDeviceId(currentRoomId, deviceId, historyFrom, historyTo);
-                    if (historyResponse && Array.isArray(historyResponse.items)) {
-                        setDeviceHistory(historyResponse.items);
-                    } else if (Array.isArray(historyResponse)) {
-                        setDeviceHistory(historyResponse);
-                    } else {
-                        setDeviceHistory([]);
+                    
+                    let processedHistory = [];
+                    // Проверяем, является ли historyResponse массивом
+                    if (Array.isArray(historyResponse)) {
+                        // Если это массив, то объединяем все его элементы в один плоский массив.
+                        // Это обработает случаи, когда historyResponse - это [ [{}], [{}], ... ]
+                        // или [ {}, {}, ... ]
+                        processedHistory = historyResponse.flat(Infinity); // Infinity для любой вложенности
+                    } else if (historyResponse && Array.isArray(historyResponse.items)) {
+                        // Если это объект с полем items, то объединяем элементы из items.
+                        processedHistory = historyResponse.items.flat(Infinity);
                     }
+                    
+                    setDeviceHistory(processedHistory);
+
                 } else {
                     setError(new Error("Устройство с указанным ID не найдено среди всех комнат."));
                 }
@@ -79,5 +86,4 @@ const useDeviceData = (deviceId) => {
     return { deviceData, deviceHistory, isLoading, error };
 };
 
-
-export default useDeviceData
+export default useDeviceData;

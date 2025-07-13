@@ -2,7 +2,7 @@ import connect from '../assets/connect.png'
 
 const Room = ( {count, name, imagePath} ) => {
     return (
-        <div className="shadow-xl relative w-60 h-60 rounded-4xl bg-gray-200 bg-cover hover:scale-102 group" // Добавляем 'group' сюда
+        <div className="shadow-xl relative w-60 h-60 rounded-4xl bg-gray-200 bg-cover hover:scale-102 group"
             style={{backgroundImage: `url(${imagePath})`}}
         >
             <div className="inline-flex items-center gap-2 absolute rounded-4xl top-4 left-4 px-4 py-1 bg-gray-100 shadow-md text-brown opacity-0 group-hover:opacity-100 transition-opacity duration-300">
