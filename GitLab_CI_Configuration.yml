@@ -1,0 +1,59 @@
+before_script:
+  - export IMAGE_TAG="${CI_COMMIT_SHORT_SHA}"
+  - export IMAGE_NAME="${CI_REGISTRY}/${CI_PROJECT_PATH}:${IMAGE_TAG}"
+
+stages:
+  - build
+  - deploy
+
+build:
+   stage: build
+   # Использование kaniko для создания контейнера внутри контейнера для большей безопасности.
+   image:
+      name: gcr.io/kaniko-project/executor:debug
+      entrypoint: [""]
+   script:
+      - mkdir -p /kaniko/.docker
+      # Отправка образа контейнера в реестр. Образ отмечен хэшем коммита.
+      - echo "{\"auths\":{\"$CI_REGISTRY\":{\"auth\":\"$(echo -n "json_key:${CI_REGISTRY_KEY}" | base64 | tr -d '\n' )\"}}}" > /kaniko/.docker/config.json
+      - >-
+         /kaniko/executor
+         --context "${CI_PROJECT_DIR}"
+         --dockerfile "${CI_PROJECT_DIR}/Dockerfile"
+         --destination "${CI_REGISTRY}/${CI_PROJECT_PATH}:${CI_COMMIT_SHORT_SHA}"
+   only:
+    - main
+
+deploy:
+  stage: deploy
+  needs:
+    - job: build
+      optional: true
+  image: alpine:3.19
+  before_script:
+    - apk add --no-cache bash curl
+    - export IMAGE_TAG="${CI_COMMIT_SHORT_SHA}"
+    - export IMAGE_NAME="${CI_REGISTRY}/${CI_PROJECT_PATH}:${IMAGE_TAG}"
+    - echo "IMAGE_NAME=$IMAGE_NAME"
+    - curl -sSL https://storage.yandexcloud.net/yandexcloud-yc/install.sh | bash
+    - export PATH="$PATH:$HOME/yandex-cloud/bin"
+    - echo "$YC_KEY" > key.json
+    - yc config profile create cicd-profile
+    - yc config set service-account-key key.json
+    - yc config set cloud-id "$YC_CLOUD_ID"
+    - yc config set folder-id "$YC_FOLDER_ID"
+  script:
+    # Генерируем docker-compose.yaml для деплоя
+    - |
+      cat > docker-compose.yaml <<EOF
+      version: '3.8'
+      services:
+        app:
+          image: "${IMAGE_NAME}"
+          ports:
+            - "80:80"
+      EOF
+    # Обновляем контейнер на инстансе через yc CLI
+    - yc compute instance update-container "$YC_VM_NAME" --docker-compose-file=docker-compose.yaml
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
