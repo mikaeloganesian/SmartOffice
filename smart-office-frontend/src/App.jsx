@@ -7,6 +7,7 @@ import RoomsPage from './pages/RoomsPage';
 import JournalPage from './pages/JournalPage';
 import DevicesPage from './pages/DevicesPage';
 import LoginPage from './pages/LoginPage';
+import DevicePage from './pages/DevicePage'
 
 import background from './assets/background.jpg'
 
@@ -26,6 +27,7 @@ export default function App() {
           <Route element={<Menu />}>
             <Route path="/" element={<RoomsPage/>} />
             <Route path="/room/:roomId" element={<RoomPage/>} />
+            <Route path="/device/:deviceId" element={<DevicePage/>} />
             <Route path="/devices" element={<DevicesPage/>} />
             <Route path="/journal" element={<JournalPage/>} />
           </Route>

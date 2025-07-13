@@ -1,20 +1,23 @@
-// RoomsPage.js
 import Room from "../components/Room";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import RoomService from "../api/room-service/room.api";
 
-import { getImageByRoomId } from '../utils/imageUtils'; // <-- Импорт новой функции
+import { getImageByRoomId } from '../utils/imageUtils';
 
 const RoomsPage = () => {
     const [roomsData, setRoomsData] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    // Будем хранить количество устройств для каждой комнаты по её ID: { roomId: deviceCount, ... }
+    const [roomDeviceCounts, setRoomDeviceCounts] = useState({});
+    const [isLoadingRooms, setIsLoadingRooms] = useState(true); // Отдельный флаг для загрузки комнат
+    const [isLoadingDevices, setIsLoadingDevices] = useState(false); // Отдельный флаг для загрузки устройств для комнат
     const [error, setError] = useState(null);
 
+    // Эффект для загрузки списка комнат
     useEffect(() => {
         async function fetchRooms() {
             try {
-                setIsLoading(true);
+                setIsLoadingRooms(true);
                 const response = await RoomService.getAllRooms();
                 if (response && Array.isArray(response.items)) {
                     setRoomsData(response.items);
@@ -25,17 +28,54 @@ const RoomsPage = () => {
                     setRoomsData([]);
                 }
             } catch (err) {
-                console.error("Ошибка в получении комнаты: ", err);
+                console.error("Ошибка при получении комнат: ", err);
                 setError(err);
             } finally {
-                setIsLoading(false);
+                setIsLoadingRooms(false);
             }
         }
         fetchRooms();
     }, []);
 
+    useEffect(() => {
+        async function fetchDeviceCounts() {
+            if (roomsData.length === 0) {
+                setRoomDeviceCounts({}); 
+                setIsLoadingDevices(false);
+                return;
+            }
+
+            setIsLoadingDevices(true); 
+            const counts = {};
+            const fetchPromises = roomsData.map(async (room) => {
+                try {
+                    const response = await RoomService.getRoomDevicesById(room.id);
+                    console.log(response)
+                    if (response && Array.isArray(response.items)) {
+                        counts[room.id] = response.items.length;
+                    } else {
+                        // Если ответ не содержит items или не массив, считаем 0 устройств
+                        counts[room.id] = 0;
+                        console.warn(`Ответ для комнаты ${room.id} не содержит устройств в items:`, response);
+                    }
+                } catch (err) {
+                    console.error(`Ошибка при получении устройств для комнаты ${room.id}: `, err);
+                    counts[room.id] = 0; // В случае ошибки считаем 0 устройств
+                }
+            });
+
+            await Promise.all(fetchPromises); // Ждем завершения всех запросов
+            setRoomDeviceCounts(counts); // Обновляем состояние один раз
+            setIsLoadingDevices(false); // Завершаем загрузку счетчиков
+        }
+
+        fetchDeviceCounts();
+    }, [roomsData]);
+
+    const isLoading = isLoadingRooms || isLoadingDevices;
+
     if (isLoading) {
-        return <div className="text-center mt-20 text-xl">Загрузка комнат...</div>;
+        return <div className="text-center mt-20 text-xl">Загрузка данных...</div>;
     }
 
     if (error) {
@@ -47,8 +87,9 @@ const RoomsPage = () => {
     return (
         <div className="grid mt-12 grid-cols-4 gap-5 p-5 mx-20">
             {roomsToRender.length > 0 ? (
-                roomsToRender.map((room) => { // <-- Убрали 'index', так как он больше не нужен для выбора изображения
-                    const roomImage = getImageByRoomId(room.id); // <-- Используем ID комнаты для выбора изображения
+                roomsToRender.map((room) => {
+                    const roomImage = getImageByRoomId(room.id);
+                    const deviceCount = roomDeviceCounts[room.id] !== undefined ? roomDeviceCounts[room.id] : '...'; // Показывать '...' если еще грузится
 
                     return (
                         <Link
@@ -56,9 +97,9 @@ const RoomsPage = () => {
                             key={room.id}
                         >
                             <Room
-                                imagePath={roomImage} // Передаем изображение, выбранное по ID
+                                imagePath={roomImage}
                                 name={room.name}
-                                count={room.status || "1"}
+                                count={`${deviceCount}`}
                             />
                         </Link>
                     );

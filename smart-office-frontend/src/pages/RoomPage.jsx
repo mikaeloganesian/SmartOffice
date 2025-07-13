@@ -1,4 +1,3 @@
-// RoomPage.js
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from "react-router-dom";
 
@@ -140,7 +139,7 @@ const RoomPage = () => {
                                     value={device.last_value === "false" ? "N/A" : device.last_value}
                                     name={device.name || "Без имени"}
                                     imagePath={device.imagePath || testImage}
-                                    status={device.last_value === "false" ? "● Offline" : "● Online"}
+                                    status={device.last_value === "false" ? "Offline" : "Online"}
                                 />
                             ))
                         ) : (
