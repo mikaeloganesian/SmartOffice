@@ -93,7 +93,6 @@ const DevicePage = () => {
                                 <XAxis dataKey="time" />
                                 <YAxis />
                                 <Tooltip />
-                                <Legend />
                                 <Line type="monotone" dataKey="value" name="Значение" stroke="#a52a2a" strokeWidth={2} activeDot={{ r: 8 }}/>
                             </LineChart>
                         </ResponsiveContainer>
@@ -142,7 +141,7 @@ const DevicePage = () => {
 
             {isFullScreen && (
                 <div
-                    className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 cursor-zoom-out"
+                    className="fixed rounded-2xl inset-0 bg-opacity-75 flex items-center justify-center z-50 cursor-zoom-out"
                     onClick={() => setIsFullScreen(false)}
                 >
                     <img

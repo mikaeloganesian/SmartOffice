@@ -6,10 +6,27 @@ const LoginPage = () => {
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [error, setError] = useState('');
+
+    const testAccounts = {
+        "user@edu.hse.ru": { password: "changeme", role: "user", name: "Пользователь Микаэл" },
+        "admin@edu.hse.ru": { password: "changeme", role: "admin", name: "Админ Микаэл" }
+    };
 
     const handleSubmit = (event) => {
         event.preventDefault();
-        navigate("/");
+        setError('');
+
+        const account = testAccounts[email];
+
+        if (account && account.password === password) {
+            localStorage.setItem('isLoggedIn', 'true');
+            localStorage.setItem('userRole', account.role);
+            localStorage.setItem('userName', account.name);
+            navigate("/");
+        } else {
+            setError('Неверный Email или пароль.');
+        }
     };
 
     return (
@@ -25,7 +42,7 @@ const LoginPage = () => {
                             type="email"
                             id="email"
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="test@edu.hse.ru"
+                            placeholder="user@example.com или admin@example.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                         />
@@ -38,11 +55,14 @@ const LoginPage = () => {
                             type="password"
                             id="password"
                             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            placeholder="********"
+                            placeholder="Пароль"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                         />
                     </div>
+                    {error && (
+                        <p className="text-red-500 text-xs italic mb-4">{error}</p>
+                    )}
                     <div className="flex items-center justify-between">
                         <button
                             type="submit"

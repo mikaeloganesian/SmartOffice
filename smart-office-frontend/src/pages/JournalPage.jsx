@@ -110,10 +110,10 @@ const JournalPage = () => {
             </div>
 
             <div className="text-brown grid mb-2 col-span-10 grid-cols-10 gap-4 p-2 items-center border-b border-gray-200">
-                <div className="text-sm col-span-2 font-bold">Дата и время</div>
-                <div className="text-sm col-span-3 font-bold">Комната</div>
-                <div className="text-sm col-span-3 font-bold">Устройство</div>
-                <div className="text-sm col-span-2 font-bold">Значение</div>
+                <div className="text-sm col-span-2 font-medium">Дата и время</div>
+                <div className="text-sm col-span-3 font-medium">Комната</div>
+                <div className="text-sm col-span-3 font-medium">Устройство</div>
+                <div className="text-sm col-span-2 font-medium">Значение</div>
             </div>
 
             {filteredAndSortedRecords.length > 0 ? (

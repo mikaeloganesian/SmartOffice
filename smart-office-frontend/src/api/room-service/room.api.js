@@ -57,7 +57,33 @@ async getDeviceByRoomAndDeviceId(roomId, deviceId, from, to) {
         console.error("Error fetching device by room and device ID:", error);
         throw error;
     }
-}
+},
+createRoom: async (roomName) => {
+  // Проблема бэка - 500 если ownerId неуникальный (бред)
+    const randomOwnerId = crypto.randomUUID(); 
+    
+    try {
+      const response = await apiClient.post(USER_BASE_URL, {
+        "name": roomName,
+        "owner_id": randomOwnerId
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка при создании комнаты: ', error);
+      throw error;
+    }
+  },
+
+  removeRoom: async (roomId) => {
+    try {
+      const response = await apiClient.delete(`${USER_BASE_URL}/${roomId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Ошибка во время удаления комнаты: ', error)
+      throw(error)
+    }
+  }
+
 };
 
 export default RoomService;

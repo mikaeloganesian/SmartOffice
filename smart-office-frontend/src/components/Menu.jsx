@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { NavLink, Link, Outlet } from 'react-router-dom';
+import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 
 
 const Menu = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const baseClasses = "px-4 py-2 rounded-3xl ";
   const activeClasses = "bg-brown text-white ";
@@ -12,6 +13,17 @@ const Menu = () => {
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn'); // Удаляем флаг авторизации
+    localStorage.removeItem('userRole');   // Удаляем роль пользователя
+    setIsDropdownOpen(false); // Закрываем выпадающее меню
+    navigate("/login"); // Перенаправляем на страницу логина
+  };
+
+
+  const userName = localStorage.getItem('userName') || 'Гость';
+
 
   return (
     <>
@@ -50,7 +62,7 @@ const Menu = () => {
             className="italic text-lg font-light cursor-pointer select-none"
             onClick={toggleDropdown}
           >
-            Оганесян Микаэл
+            {userName}
           </span>
 
           {isDropdownOpen && (
@@ -58,7 +70,7 @@ const Menu = () => {
               <Link
                 to={"/login"}
                 className="block px-4 py-2 text-sm text-brown hover:bg-gray-100"
-                onClick={() => setIsDropdownOpen(false)}
+                onClick={handleLogout}
               >
                 Выход
               </Link>
