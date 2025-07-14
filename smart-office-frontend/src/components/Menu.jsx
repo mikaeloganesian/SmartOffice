@@ -1,18 +1,29 @@
-import React, { useState } from 'react'; // Импортируем useState
-import { NavLink, Link, Outlet } from 'react-router-dom';
+import React, { useState } from 'react';
+import { NavLink, Link, Outlet, useNavigate } from 'react-router-dom';
 
 
 const Menu = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Состояние для управления видимостью выпадающего списка
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const navigate = useNavigate();
 
   const baseClasses = "px-4 py-2 rounded-3xl ";
   const activeClasses = "bg-brown text-white ";
   const inactiveClasses = "bg-gray text-brown hover:bg-brown hover:text-white";
 
-  // Функция для переключения состояния выпадающего списка
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn'); // Удаляем флаг авторизации
+    localStorage.removeItem('userRole');   // Удаляем роль пользователя
+    setIsDropdownOpen(false); // Закрываем выпадающее меню
+    navigate("/login"); // Перенаправляем на страницу логина
+  };
+
+
+  const userName = localStorage.getItem('userName') || 'Гость';
+
 
   return (
     <>
@@ -46,20 +57,20 @@ const Menu = () => {
           </NavLink>
         </div>
 
-        <div className="flex-none pr-4 inline-flex gap-8 relative"> {/* Добавляем relative для позиционирования выпадающего списка */}
+        <div className="flex-none pr-4 inline-flex gap-8 relative">
           <span
-            className="italic text-lg font-light cursor-pointer select-none" // Добавляем cursor-pointer и select-none
-            onClick={toggleDropdown} // Обработчик клика для открытия/закрытия
+            className="italic text-lg font-light cursor-pointer select-none"
+            onClick={toggleDropdown}
           >
-            Оганесян Микаэл
+            {userName}
           </span>
 
-          {isDropdownOpen && ( // Условный рендеринг выпадающего списка
-            <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10"> {/* Позиционируем список */}
+          {isDropdownOpen && (
+            <div className="absolute top-full right-0 mt-2 w-32 bg-white rounded-md shadow-lg py-1 z-10">
               <Link
                 to={"/login"}
-                className="block px-4 py-2 text-sm text-brown hover:bg-gray-100" // Стили для элемента списка
-                onClick={() => setIsDropdownOpen(false)} // Закрываем список после клика
+                className="block px-4 py-2 text-sm text-brown hover:bg-gray-100"
+                onClick={handleLogout}
               >
                 Выход
               </Link>

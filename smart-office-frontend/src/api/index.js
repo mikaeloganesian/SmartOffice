@@ -1,12 +1,11 @@
 import axios from 'axios';
 
-// 1. Создаем экземпляр Axios с базовой конфигурацией
 const apiClient = axios.create({
   baseURL: 'http://89.169.180.190:8080/api/v1/', 
-  timeout: 10000, // Таймаут в 10 секунд
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
+    'Accept': '*/*',
   },
 });
 

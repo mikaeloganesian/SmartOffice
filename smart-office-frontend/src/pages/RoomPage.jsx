@@ -1,6 +1,5 @@
-// RoomPage.js
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 
 import Tag from "../components/Tag";
 import Device from '../components/Device';
@@ -12,8 +11,7 @@ import { getImageByRoomId } from '../utils/imageUtils';
 
 const RoomPage = () => {
     const [isFullScreen, setIsFullScreen] = useState(false);
-    const currentLocation = useLocation();
-    const roomId = new URLSearchParams(currentLocation.search).get("roomId");
+    const { roomId } = useParams();
 
     const [roomDevices, setRoomDevices] = useState(null);
     const [roomData, setRoomData] = useState(null);
@@ -134,14 +132,16 @@ const RoomPage = () => {
                     <div className="grid grid-cols-3 gap-5">
                         {devicesToRender.length > 0 ? (
                             devicesToRender.map((device) => (
-                                <Device
-                                    key={device.id}
-                                    size='m'
-                                    value={device.last_value === "false" ? "N/A" : device.last_value}
-                                    name={device.name || "Без имени"}
-                                    imagePath={device.imagePath || testImage}
-                                    status={device.last_value === "false" ? "● Offline" : "● Online"}
-                                />
+                                <Link to={`/device/${device.id}?roomId=${roomId}`}>
+                                    <Device
+                                        key={device.id}
+                                        size='m'
+                                        value={device.last_value === "false" ? "N/A" : device.last_value}
+                                        name={device.name || "Без имени"}
+                                        imagePath={device.imagePath || testImage}
+                                        status={device.last_value === "false" ? "Offline" : "Online"}
+                                    />
+                                </Link>
                             ))
                         ) : (
                             <div className="col-span-3 text-center text-xl">Устройств не найдено.</div>
